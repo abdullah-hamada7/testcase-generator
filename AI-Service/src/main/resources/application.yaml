@@ -1,10 +1,10 @@
 spring:
   application:
-    name: AI-Service
+    name: ai-service
   config:
-    import: "optional:configserver:http://localhost:8071/"
+    import: "optional:configserver:http://configserver:8071/"
 
 ai:
   model:
-    url: ${AI_MODEL_URL:http://localhost:8000/generate}
+    url: ${AI_MODEL_URL:http://ai-model:8000/generate}
 

@@ -10,6 +10,6 @@ FROM eclipse-temurin:21-jdk-alpine
 RUN apk add --no-cache curl
 LABEL maintainer="mo.com"
 WORKDIR /app
-COPY --from=build /app/target/eurekaserver-0.0.1-SNAPSHOT.jar eurekaserver-0.0.1-SNAPSHOT.jar
-EXPOSE 8070
-ENTRYPOINT ["java","-jar","eurekaserver-0.0.1-SNAPSHOT.jar"]
+COPY --from=build /app/target/gatewayserver-0.0.1-SNAPSHOT.jar gatewayserver-0.0.1-SNAPSHOT.jar
+EXPOSE 8072
+ENTRYPOINT ["java","-jar","gatewayserver-0.0.1-SNAPSHOT.jar"]

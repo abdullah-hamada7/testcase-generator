@@ -2,7 +2,7 @@ spring:
   datasource:
     username: root
     password: root
-    url: jdbc:mysql://localhost:3307/testcasedb
+    url: jdbc:mysql://testcasedb:3306/testcasedb
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
@@ -16,7 +16,7 @@ eureka:
     fetch-registry: true
     register-with-eureka: true
     service-url:
-      defaultZone: "http://localhost:8070/eureka/"
+      defaultZone: "http://eurekaserver:8070/eureka/"
 
 management:
   endpoints:
