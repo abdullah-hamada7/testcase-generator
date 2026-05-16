@@ -1,0 +1,273 @@
+services:
+
+  # =========================
+  # CONFIG SERVER
+  # =========================
+  configserver:
+    image: "m07amed66/configserver:v1"
+    container_name: configserver-ms
+    ports:
+      - "8071:8071"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    extends:
+      file: common-config.yml
+      service: microservice-base-config
+
+  # =========================
+  # EUREKA SERVER
+  # =========================
+  eurekaserver:
+    image: "m07amed66/eurekaserver:v1"
+    container_name: eurekaserver-ms
+    ports:
+      - "8070:8070"
+    depends_on:
+      configserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    environment:
+      SPRING_APPLICATION_NAME: eurekaserver
+    extends:
+      file: common-config.yml
+      service: microservice-configserver-config
+
+  # =========================
+  # GATEWAY SERVER
+  # =========================
+  gatewayserver:
+    image: "m07amed66/gatewayserver:v1"
+    container_name: gatewayserver-ms
+    ports:
+      - "8072:8072"
+
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+      projects:
+        condition: service_healthy
+      requirement:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+      testcase:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: gatewayserver
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  # =========================
+  # PROJECTS DATABASE
+  # =========================
+  projectsdb:
+    image: mysql
+    container_name: projectsdb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: projectsdb
+      MYSQL_ROOT_PASSWORD: root
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - testcase-network
+
+  # =========================
+  # REQUIREMENTS DATABASE
+  # =========================
+  requirementsdb:
+    image: mysql
+    container_name: requirementsdb
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: requirementsdb
+      MYSQL_ROOT_PASSWORD: root
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - testcase-network
+
+  # =========================
+  # TESTCASE DATABASE
+  # =========================
+  testcasedb:
+    image: mysql
+    container_name: testcasedb
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_DATABASE: testcasedb
+      MYSQL_ROOT_PASSWORD: root
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - testcase-network
+
+  # =========================
+  # PROJECTS SERVICE
+  # =========================
+  projects:
+    image: "m07amed66/projects:v1"
+    container_name: projects-ms
+    ports:
+      - "8080:8080"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      projectsdb:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      SPRING_APPLICATION_NAME: projects
+      SPRING_DATASOURCE_URL: jdbc:mysql://projectsdb:3306/projectsdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  # =========================
+  # REQUIREMENT SERVICE
+  # =========================
+  requirement:
+    image: "m07amed66/requirement:v1"
+    container_name: requirement-ms
+    ports:
+      - "9000:9000"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      requirementsdb:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+      testcase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      SPRING_APPLICATION_NAME: requirement
+      SPRING_DATASOURCE_URL: jdbc:mysql://requirementsdb:3306/requirementsdb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  # =========================
+  # TESTCASE SERVICE
+  # =========================
+  testcase:
+    image: "m07amed66/testcase:v1"
+    container_name: testcase-ms
+    ports:
+      - "9090:9090"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      testcasedb:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent localhost:9090/actuator/health/readiness | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      SPRING_APPLICATION_NAME: testcase
+      SPRING_DATASOURCE_URL: jdbc:mysql://testcasedb:3306/testcasedb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  # =========================
+  # AI MODEL CONTAINER
+  # =========================
+#  ai-model:
+#    image: "ibrahimrageh17/test-case-generator:v1"
+#    container_name: ai-model
+#    ports:
+#      - "8000:8000"
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl --fail --silent localhost:8000/docs || exit 1"]
+#      interval: 15s
+#      timeout: 10s
+#      retries: 10
+#      start_period: 40s
+#    networks:
+#      - testcase-network
+
+  # =========================
+  # AI SERVICE
+  # =========================
+  ai-service:
+    image: "m07amed66/ai-service:v1"
+    container_name: ai-service-ms
+    ports:
+      - "7000:7000"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent localhost:7000/actuator/health/readiness | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    environment:
+      SPRING_APPLICATION_NAME: ai-service
+      AI_MODEL_URL: http://localhost:8000/generate
+#      SERVER_PORT: 7000
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      SPRING_CLOUD_CONFIG_OVERRIDESYSTEMENVIRONMENTENABLED: "false"
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+networks:
+  testcase-network:
+    driver: bridge

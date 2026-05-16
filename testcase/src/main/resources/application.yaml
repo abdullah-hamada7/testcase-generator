@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: testcase
+  config:
+    import: "optional:configserver:http://localhost:8071/"
