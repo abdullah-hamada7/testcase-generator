@@ -216,8 +216,6 @@ services:
       SPRING_APPLICATION_NAME: ai-service
       SERVER_PORT: 7000
       AI_MODEL_URL: http://ai-model:8000/generate
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
-      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
     extends:
       file: common-config.yml
       service: microservice-eureka-config

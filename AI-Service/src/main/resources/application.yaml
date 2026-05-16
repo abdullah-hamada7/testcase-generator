@@ -2,9 +2,15 @@ spring:
   application:
     name: ai-service
   config:
-    import: "optional:configserver:http://configserver:8071/"
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://configserver:8071/}"
 
 ai:
   model:
     url: ${AI_MODEL_URL:http://ai-model:8000/generate}
 
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://eurekaserver:8070/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
